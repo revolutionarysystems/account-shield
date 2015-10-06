@@ -1,0 +1,13 @@
+language: java
+before_install: git clone http://github.com/revolutionarysystems/travis.git target/travis
+script: mvn deploy --settings target/travis/settings.xml
+env:
+  secure: bGqfZrsN0kw9yAKwfaFSLWPpQMg4M5D1JVA6nyA3oRH9ZVBz3z34SHYb6RBopAbyJZnR+dX9kR1B6F4ocKub0KQ9ZxVDtxrs2bkL56a5JnRj1ZWMznLaslV6ZB9MmvjqpG9nW7fh+pdPMZwORW0GlMWxbe/Nq4G6OipydS7ithc0mF9f5yf4taWeUNJYnwQwTZ1k6DKD8bqwArzv8R5aAD62qoVjhUS4hz9wwashNRDpdk006UA0nmt2pNqzau4+ki8gptdvo+efQvbZm2VHF09RlTlVJVeuwigZxkzJ3HqBBmtVgg08cbSrtgmMJEcKA31dgGT6/Xjcq5TJ+aSe9OTVu24PH6LMO1BHH5HaHf+VZnUvtzDMvvEtvIC0ThIEZijxTtP46f5zNsb9LX5MRoXi0DezXG3a4ugYtzLIOQ+/RG2PKzheaqhvObBehGuX23yshrmPw7eMTij4qdqbmucITbsmC/NY1ZqPP6OjLLSxpEpQ6E95LZNk3F+6aVBUDhx6bMeXyfObY+z26QuN/RRayniaR/Jr6cubVUVhVV1se9QJWfgi/F8SldXxebyVy1eZ0UM/YufxOY4wEZUh0Z+Y0oFA+cLZUlTvME5w+Xz9IHGMLhnK3fscQGQQsNeUtNkbTw2egm9xmARP3n8LU1raooGzB0UXFpTcyaKJGeA=
+notifications:
+  email:
+  - adam@revolutionarysystems.co.uk
+  - andrew@revolutionarysystems.co.uk
+  - ci@revolutionarysystems.co.uk
+branches:
+  except:
+  - /^v[0-9]/
