@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+    
+    <context:annotation-config/>
+    
+    <import resource="securityContext.xml"/>
+    
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:account-shield.properties</value>
+            </list>
+        </property>
+    </bean>
+	
+    <bean class="org.apache.wink.spring.Registrar">
+        <property name="classes">
+            <set value-type="java.lang.Class"/>
+        </property>
+        <property name="instances">
+            <set>
+                <bean class="uk.co.revsys.account.shield.service.AccountShieldService">
+                    <constructor-arg index="0" ref="accountShield"/>
+                </bean>
+            </set>
+        </property>
+    </bean>
+    
+    <bean id="accountShield" class="uk.co.revsys.account.shield.AccountShield">
+        <constructor-arg index="0" ref="oddballClient"/>
+        <constructor-arg index="1" ref="emailer"/>
+    </bean>
+    
+    <bean id="oddballClient" class="uk.co.revsys.oddball.client.OddballClient">
+        <constructor-arg index="0" value="${oddball.url}"/>
+        <constructor-arg index="1" value="${oddball.username}"/>
+        <constructor-arg index="2" value="${oddball.password}"/>
+    </bean>
+    
+    <bean id="emailer" class="uk.co.revsys.account.shield.Emailer">
+        <constructor-arg index="0" value="${email.host}"/>
+        <constructor-arg index="1" value="${email.port}"/>
+        <constructor-arg index="2" value="${email.username}"/>
+        <constructor-arg index="3" value="${email.password}"/>
+        <constructor-arg index="4" value="${email.transportStrategy}"/>
+    </bean>
+	
+    <bean id="templateService" class="uk.co.revsys.objectology.service.OlogyTemplateServiceImpl">
+        <constructor-arg index="0" ref="templateDao"/>
+    </bean>
+	
+    <bean id="instanceService" class="uk.co.revsys.objectology.service.OlogyInstanceServiceImpl">
+        <constructor-arg index="0" ref="instanceDaoFactory"/>
+    </bean>
+	
+    <bean id="templateDao" class="uk.co.revsys.objectology.dao.mongo.MongoDao">
+        <constructor-arg index="0" ref="mongoClient"/>
+        <constructor-arg index="1" value="${db.name}"/>
+        <constructor-arg index="2" value="uk.co.revsys.objectology.model.template.OlogyTemplate"/>
+        <constructor-arg index="3" ref="jsonTemplateMapper"/>
+        <constructor-arg index="4" value="template"/>
+    </bean>
+	
+    <bean id="instanceDaoFactory" class="uk.co.revsys.objectology.dao.mongo.MongoDaoFactory">
+        <constructor-arg index="0" ref="mongoClient"/>
+        <constructor-arg index="1" value="${db.name}"/>
+        <constructor-arg index="2" ref="jsonDBInstanceMapper"/>
+        <constructor-arg index="3" value="uk.co.revsys.objectology.model.instance.OlogyInstance"/>
+    </bean>
+    
+    <bean id="adminDao" class="uk.co.revsys.objectology.dao.mongo.MongoAdminDao">
+        <constructor-arg index="0" ref="mongoClient"/>
+        <constructor-arg index="1" value="${db.name}"/>
+    </bean>
+	
+    <bean id="mongoClient" class="uk.co.revsys.utils.mongodb.MongoClient">
+        <constructor-arg index="0" value="${db.host}"/>
+    </bean>
+	
+    <bean id="xmlObjectMapper" class="uk.co.revsys.objectology.mapping.xml.XMLObjectMapper">
+        <constructor-arg index="0" ref="xmlTemplateToJSONConverter"/>
+        <constructor-arg index="1" ref="xmlInstanceToJSONConverter"/>
+        <constructor-arg index="2" ref="jsonTemplateMapper"/>
+        <constructor-arg index="3" ref="jsonInstanceMapper"/>
+    </bean>
+    
+    <bean id="xmlTemplateToJSONConverter" class="uk.co.revsys.objectology.mapping.xml.XMLTemplateToJSONConverter"/>
+    
+    <bean id="xmlInstanceToJSONConverter" class="uk.co.revsys.objectology.mapping.xml.XMLInstanceToJSONConverter">
+        <constructor-arg index="0" ref="templateService"/>
+    </bean>
+	
+    <bean id="jsonInstanceMapper" class="uk.co.revsys.objectology.mapping.json.JsonInstanceMapper">
+        
+    </bean>
+    
+    <bean id="jsonDBInstanceMapper" class="uk.co.revsys.objectology.mapping.json.JsonDBInstanceMapper"/>
+	
+    <bean id="jsonTemplateMapper" class="uk.co.revsys.objectology.mapping.json.JsonTemplateMapper">
+    </bean>
+    
+    <bean id="sequenceGenerator" class="uk.co.revsys.objectology.dao.mongo.MongoSequenceGenerator">
+        <constructor-arg index="0" ref="mongoClient"/>
+        <constructor-arg index="1" value="objectology"/>
+        <constructor-arg index="2" value="sequence"/>
+    </bean>
+    
+    <bean id="serviceFactory" class="uk.co.revsys.objectology.service.ServiceFactory">
+        <property name="ologyTemplateService" ref="templateService"/>
+        <property name="ologyInstanceService" ref="instanceService"/>
+        <property name="sequenceGenerator" ref="sequenceGenerator"/>
+    </bean>
+    
+    <bean id="actionHandlerFactory" class="uk.co.revsys.objectology.action.handler.DefaultActionHandlerFactory">
+        <constructor-arg index="0" ref="jsonInstanceMapper"/>
+    </bean>
+    
+    <bean id="pathEvaluator" class="uk.co.revsys.objectology.transform.path.PathEvaluatorImpl"/>
+    
+    <bean id="viewService" class="uk.co.revsys.objectology.service.ViewServiceImpl">
+        <constructor-arg index="0" ref="viewDefinitionDao"/>
+        <constructor-arg index="1" ref="ologyTransformer"/>
+        <constructor-arg index="2" ref="defaultViewDefinitionMap"/>
+    </bean>
+    
+    <bean id="defaultViewDefinitionMap" class="uk.co.revsys.objectology.view.definition.DefaultViewDefinitionMap"/>
+    
+    <bean id="viewDefinitionDao" class="uk.co.revsys.objectology.dao.mongo.MongoViewDefinitionDao">
+        <constructor-arg index="0" ref="mongoClient"/>
+        <constructor-arg index="1" value="${db.name}"/>
+        <constructor-arg index="2" ref="jsonViewDefinitionMapper"/>
+    </bean>
+    
+    <bean id="jsonViewDefinitionMapper" class="uk.co.revsys.objectology.mapping.json.JsonViewDefinitionMapper"/>
+    
+    <bean id="ologyTransformer" class="uk.co.revsys.objectology.transform.OlogyTransformerImpl"></bean>
+    
+    <bean id="viewDefinitionLoader" class="uk.co.revsys.objectology.service.ViewDefinitionLoader">
+        <constructor-arg index="0" ref="viewDefinitionParser"/>
+        <constructor-arg index="1" ref="viewService"/>
+    </bean>
+    
+    <bean id="viewDefinitionParser" class="uk.co.revsys.objectology.view.definition.parser.ViewDefinitionParserImpl"/>
+
+</beans>

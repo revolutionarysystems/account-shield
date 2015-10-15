@@ -8,8 +8,11 @@
 	<name>Account Shield - Parent</name>
 	
     <modules>
-        <module>user-manager</module>
+        <module>model</module>
+        <module>core</module>
+        <module>service</module>
         <module>java-client</module>
+        <module>user-manager</module>
     </modules>
     
 	<build>

@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>account-shield-client</artifactId>
+    <artifactId>account-shield-core</artifactId>
     <packaging>jar</packaging>
-    <name>Account Shield - Client</name>
+    <name>Account Shield - Core</name>
 
     <parent>
         <groupId>uk.co.revsys.account-shield</groupId>
@@ -24,21 +24,21 @@
         </dependency>
         
         <dependency>
-            <groupId>uk.co.revsys.utils</groupId>
-            <artifactId>http-utils</artifactId>
-            <version>0.1.0</version>
+            <groupId>uk.co.revsys.oddball</groupId>
+            <artifactId>oddball-client</artifactId>
+            <version>0.3.0-SNAPSHOT</version>
         </dependency>
         
         <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20141113</version>
+            <groupId>uk.co.revsys.objectology</groupId>
+            <artifactId>objectology</artifactId>
+            <version>0.3.0-SNAPSHOT</version>
         </dependency>
         
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.12</version>
+            <groupId>org.codemonkey.simplejavamail</groupId>
+            <artifactId>simple-java-mail</artifactId>
+            <version>2.4</version>
         </dependency>
         
         <!-- Testing -->

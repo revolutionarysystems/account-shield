@@ -1,0 +1,11 @@
+db.host = 
+db.name = 
+user.manager.db.host = 
+oddball.url = 
+oddball.username = 
+oddball.password = 
+email.host = 
+email.port = 25
+email.username = 
+email.password = 
+email.transportStrategy = SMTP_TLS

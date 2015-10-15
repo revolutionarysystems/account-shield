@@ -1,9 +1,8 @@
 package uk.co.revsys.account.shield;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -21,59 +20,103 @@ public class AccountShieldClientImpl implements AccountShieldClient {
 
     private HttpClient httpClient;
     private String url;
-    private String account;
     private String username;
     private String password;
 
-    public AccountShieldClientImpl(String url, String account, String username, String password) {
-        this(new HttpClientImpl(), url, account, username, password);
-    }
-
-    public AccountShieldClientImpl(HttpClient httpClient, String url, String account, String username, String password) {
-        this.httpClient = httpClient;
+    public AccountShieldClientImpl(String url, String username, String password) {
+        this.httpClient = new HttpClientImpl();
         this.url = url;
-        this.account = account;
         this.username = username;
         this.password = password;
     }
 
     @Override
-    public CheckLoginResult checkLogin(String sessionId, String userId) throws IOException {
-        JSONObject json = new JSONObject();
-        JSONObject data = new JSONObject();
-        data.put("owner", account);
-        data.put("session", sessionId);
-        data.put("VID", userId);
-        data.put("partition", "login");
-        json.put("parameters", data);
-        HttpRequest request = new HttpRequest(url);
-        if (username != null && !username.isEmpty()) {
-            request.setCredentials(new BasicAuthCredentials(username, password));
-        }
-        request.setMethod(HttpMethod.GET);
-        Map parameters = new HashMap();
-        String caseString = json.toString();
-        logger.info(caseString);
-        parameters.put("case", caseString);
-        parameters.put("inboundTransformer", "ASLogin.incoming.json");
-        parameters.put("processor", "ASLoginProcessor.script");
-        request.setParameters(parameters);
+    public void registerUser(User user) throws AccountShieldException, IOException {
+        HttpRequest request = new HttpRequest(url + "/registerUser");
+        request.setMethod(HttpMethod.POST);
+        request.setCredentials(new BasicAuthCredentials(username, password));
+        request.getHeaders().put("Content-Type", "application/json");
+        request.setBody(new ByteArrayInputStream(new JSONObject(user).toString().getBytes()));
         HttpResponse response = httpClient.invoke(request);
-        if (response.getStatusCode() == 200) {
-            InputStream responseStream = response.getInputStream();
-            if (responseStream != null) {
-                logger.info(IOUtils.toString(responseStream));
-                responseStream.close();
-            }
-        } else {
-            logger.error("AS Server returned " + response.getStatusCode());
-            InputStream responseStream = response.getInputStream();
-            if (responseStream != null) {
-                logger.error(IOUtils.toString(responseStream));
-                responseStream.close();
-            }
+        readResponse(response);
+    }
+
+    @Override
+    public User getUser(String userId) throws UserNotFoundException, AccountShieldException, IOException {
+        HttpRequest request = new HttpRequest(url + "/" + userId);
+        request.setCredentials(new BasicAuthCredentials(username, password));
+        HttpResponse response = httpClient.invoke(request);
+        String responseText = readResponse(response);
+        JSONObject json = new JSONObject(responseText);
+        User user = new User(json.getString("id"));
+        user.setEmail(json.getString("email"));
+        return user;
+    }
+
+    @Override
+    public void updateUser(User user) throws UserNotFoundException, AccountShieldException, IOException {
+        HttpRequest request = new HttpRequest(url + "/" + user.getId());
+        request.setMethod(HttpMethod.POST);
+        request.setCredentials(new BasicAuthCredentials(username, password));
+        request.getHeaders().put("Content-Type", "application/json");
+        request.setBody(new ByteArrayInputStream(new JSONObject(user).toString().getBytes()));
+        HttpResponse response = httpClient.invoke(request);
+        readResponse(response);
+    }
+
+    @Override
+    public DeviceCheck checkDevice(String sessionId, String userId) throws UserNotFoundException, AccountShieldException, IOException {
+        HttpRequest request = new HttpRequest(url + "/checkDevice?sessionId=" + sessionId + "&userId=" + userId);
+        request.setCredentials(new BasicAuthCredentials(username, password));
+        HttpResponse response = httpClient.invoke(request);
+        String responseText = readResponse(response);
+        JSONObject json = new JSONObject(responseText);
+        DeviceCheck deviceCheck = new DeviceCheck(true);
+        return deviceCheck;
+    }
+
+    @Override
+    public void requestDeviceVerification(String sessionId, String userId) throws UserNotFoundException, AccountShieldException, IOException {
+        HttpRequest request = new HttpRequest(url + "/requestDeviceVerification?sessionId=" + sessionId + "&userId=" + userId);
+        request.setCredentials(new BasicAuthCredentials(username, password));
+        HttpResponse response = httpClient.invoke(request);
+        readResponse(response);
+    }
+
+    @Override
+    public void verifyDevice(String sessionId, String userId, String verificationCode) throws UserNotFoundException, AccountShieldException, IOException {
+        HttpRequest request = new HttpRequest(url + "/verifyDevice?sessionId=" + sessionId + "&userId=" + userId + "&verificationCode=" + verificationCode);
+        request.setCredentials(new BasicAuthCredentials(username, password));
+        HttpResponse response = httpClient.invoke(request);
+        readResponse(response);
+    }
+
+    private String readResponse(HttpResponse response) throws IOException, AccountShieldException {
+        InputStream responseStream = response.getInputStream();
+        String responseText = null;
+        try {
+            responseText = IOUtils.toString(responseStream);
+        } finally {
+            responseStream.close();
         }
-        return new CheckLoginResult();
+        if (response.getStatusCode() == 200) {
+            return responseText;
+        } else if(response.getStatusCode() == 500){
+            JSONObject json = new JSONObject(responseText);
+            String type = json.getString("type");
+            String message = json.getString("message");
+            if(type.equals(UserNotFoundException.class.getSimpleName())){
+                throw new UserNotFoundException();
+            }else if(type.equals(InvalidVerificationCodeException.class.getSimpleName())){
+                throw new InvalidVerificationCodeException();
+            }
+            throw new AccountShieldException(message);
+        }else{
+            if(responseText == null){
+                throw new IOException("Server returned status " + response.getStatusCode());
+            }
+            throw new IOException("Server returned status " + response.getStatusCode() + ": " + responseText);
+        }
     }
 
 }

@@ -1,3 +1,11 @@
 /user-manager/target/
 /user-manager - Copy/target/
 /java-client/target/
+/java-client - Copy/target/
+/service/target/
+/service - Copy/target/
+/core/target/
+/core - Copy/target/
+/model/target/
+/service/src/main/resources/account-shield.properties
+/service/nb-configuration.xml
