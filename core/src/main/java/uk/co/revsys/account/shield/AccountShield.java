@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.mail.Message.RecipientType;
 import org.apache.commons.lang.RandomStringUtils;
 import org.codemonkey.simplejavamail.Email;
@@ -35,23 +37,30 @@ public class AccountShield {
         this.mailer = mailer;
     }
 
-    public void registerUser(String accountId, User user) throws AccountShieldException {
+    public void registerUser(String accountId, String sessionId, User user) throws AccountShieldException {
         try {
             OlogyTemplate userTemplate = ServiceFactory.getOlogyTemplateService().findByName("Account Shield User Template");
-            OlogyInstance userInstance = new OlogyInstance(userTemplate);
+            OlogyInstance userInstance = getUserInstance(accountId, user.getId());
+            if(userInstance!=null){
+                throw new UserAlreadyExistsException();
+            }
+            userInstance = new OlogyInstance(userTemplate);
             userInstance.setAttribute("accountId", new Property(accountId));
             userInstance.setAttribute("userId", new Property(user.getId()));
             userInstance.setAttribute("email", new Property(user.getEmail()));
             ServiceFactory.getOlogyInstanceService().create(userInstance);
+            applyLogin(accountId, user.getId(), sessionId, "registered");
         } catch (DaoException ex) {
             throw new AccountShieldException("Unable to register user");
         } catch (ValidationException ex) {
             throw new AccountShieldException("Unable to register user: " + ex.getMessage());
         } catch (UnexpectedAttributeException ex) {
             throw new AccountShieldException("Unable to register user: " + ex.getMessage());
+        } catch (OddballClientException ex) {
+            throw new AccountShieldException("Unable to register user");
         }
     }
-    
+
     public User getUser(String accountId, String userId) throws UserNotFoundException, AccountShieldException {
         OlogyInstance userInstance = getUserInstance(accountId, userId);
         User user = new User(userInstance.getId());
@@ -85,15 +94,7 @@ public class AccountShield {
     public DeviceCheck checkDevice(String accountId, String sessionId, String userId) throws AccountShieldException {
         try {
             getUserInstance(accountId, userId);
-            JSONObject json = new JSONObject();
-            JSONObject data = new JSONObject();
-            data.put("owner", accountId);
-            data.put("session", sessionId);
-            data.put("VID", userId);
-            data.put("partition", "login");
-            json.put("parameters", data);
-            ApplyRuleSetRequest request = new ApplyRuleSetRequest("ASLogin.rules", json.toString(), "ASLogin.incoming.json", "ASLoginProcessor.script");
-            Assessment assessment = oddballClient.applyRuleSet(request);
+            Assessment assessment = applyLogin(accountId, sessionId, userId, "login");
             return new DeviceCheck(true);
         } catch (OddballClientException ex) {
             throw new AccountShieldException("Unable to check device");
@@ -147,7 +148,10 @@ public class AccountShield {
             if (verificationCodeInstance.getAttribute("expiryTime", Time.class).getValue().before(new Date())) {
                 throw new InvalidVerificationCodeException();
             }
+            applyLogin(accountId, sessionId, userId, "email");
         } catch (DaoException ex) {
+            throw new AccountShieldException("Unable to verify device");
+        } catch (OddballClientException ex) {
             throw new AccountShieldException("Unable to verify device");
         }
     }
@@ -165,6 +169,20 @@ public class AccountShield {
         } catch (DaoException ex) {
             throw new AccountShieldException("Failed to retrieve user");
         }
+    }
+
+    private Assessment applyLogin(String accountId, String sessionId, String userId, String verification) throws OddballClientException {
+        JSONObject json = new JSONObject();
+        JSONObject data = new JSONObject();
+        data.put("owner", accountId);
+        data.put("session", sessionId);
+        data.put("VID", userId);
+        data.put("partition", "login");
+        data.put("verification", verification);
+        json.put("parameters", data);
+        ApplyRuleSetRequest request = new ApplyRuleSetRequest("ASLogin.rules", json.toString(), "ASLogin.incoming.json", "ASLoginProcessor.script");
+        Assessment assessment = oddballClient.applyRuleSet(request);
+        return assessment;
     }
 
 }

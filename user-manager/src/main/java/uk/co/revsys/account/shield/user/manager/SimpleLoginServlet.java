@@ -12,6 +12,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import uk.co.revsys.account.shield.AccountShieldClient;
 import uk.co.revsys.account.shield.AccountShieldException;
 import uk.co.revsys.account.shield.DeviceCheck;
+import uk.co.revsys.account.shield.UserAlreadyExistsException;
 import uk.co.revsys.account.shield.UserNotFoundException;
 import uk.co.revsys.user.manager.model.User;
 
@@ -38,7 +39,11 @@ public class SimpleLoginServlet extends uk.co.revsys.user.manager.servlet.Simple
             } catch (UserNotFoundException ex) {
                 uk.co.revsys.account.shield.User asUser = new uk.co.revsys.account.shield.User(userId);
                 asUser.setEmail(user.getUsername());
-                accountShieldClient.registerUser(asUser);
+                try {
+                    accountShieldClient.registerUser(sessionId, asUser);
+                } catch (UserAlreadyExistsException exc) {
+                    // Ignore - should never happen
+                }
             }
         } catch (AccountShieldException ex) {
 

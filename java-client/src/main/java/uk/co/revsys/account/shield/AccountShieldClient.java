@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public interface AccountShieldClient {
 
-    public void registerUser(User user) throws AccountShieldException, IOException;
+    public void registerUser(String sessionId, User user) throws UserAlreadyExistsException, AccountShieldException, IOException;
     
     public User getUser(String userId) throws UserNotFoundException, AccountShieldException, IOException;
     

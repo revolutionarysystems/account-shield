@@ -12,7 +12,7 @@ import javax.ws.rs.core.Response;
 import org.apache.shiro.SecurityUtils;
 import org.json.JSONObject;
 import uk.co.revsys.account.shield.AccountShield;
-import uk.co.revsys.account.shield.AccountShieldException;
+import uk.co.revsys.account.shield.DeviceCheck;
 import uk.co.revsys.account.shield.User;
 
 @Path("/")
@@ -25,15 +25,15 @@ public class AccountShieldService {
     }
     
     @POST
-    @Path("/registerUser")
+    @Path("{sessionId}/registerUser")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response registerUser(String jsonString){
+    public Response registerUser(@PathParam("sessionId") String sessionId, String jsonString){
         JSONObject json = new JSONObject(jsonString);
         User user = new User(json.getString("id"));
         user.setEmail(json.getString("email"));
         try {
-            accountShield.registerUser(getAccountId(), user);
+            accountShield.registerUser(getAccountId(), sessionId, user);
             return Response.ok().build();
         } catch (Exception ex) {
             return handleException(ex);
@@ -73,8 +73,8 @@ public class AccountShieldService {
     @Produces(MediaType.APPLICATION_JSON)
     public Response checkDevice(@QueryParam("sessionId") String sessionId, @QueryParam("userId") String userId){
         try {
-            accountShield.checkDevice(getAccountId(), sessionId, userId);
-            return Response.ok().build();
+            DeviceCheck deviceCheck = accountShield.checkDevice(getAccountId(), sessionId, userId);
+            return Response.ok().entity(new JSONObject(deviceCheck).toString()).build();
         } catch (Exception ex) {
             return handleException(ex);
         }

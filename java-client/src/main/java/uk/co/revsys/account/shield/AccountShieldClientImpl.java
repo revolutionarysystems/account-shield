@@ -31,8 +31,8 @@ public class AccountShieldClientImpl implements AccountShieldClient {
     }
 
     @Override
-    public void registerUser(User user) throws AccountShieldException, IOException {
-        HttpRequest request = new HttpRequest(url + "/registerUser");
+    public void registerUser(String sessionId, User user) throws AccountShieldException, IOException {
+        HttpRequest request = new HttpRequest(url + "/" + sessionId + "/registerUser");
         request.setMethod(HttpMethod.POST);
         request.setCredentials(new BasicAuthCredentials(username, password));
         request.getHeaders().put("Content-Type", "application/json");
@@ -94,25 +94,29 @@ public class AccountShieldClientImpl implements AccountShieldClient {
     private String readResponse(HttpResponse response) throws IOException, AccountShieldException {
         InputStream responseStream = response.getInputStream();
         String responseText = null;
-        try {
-            responseText = IOUtils.toString(responseStream);
-        } finally {
-            responseStream.close();
+        if (responseStream != null) {
+            try {
+                responseText = IOUtils.toString(responseStream);
+            } finally {
+                responseStream.close();
+            }
         }
         if (response.getStatusCode() == 200) {
             return responseText;
-        } else if(response.getStatusCode() == 500){
+        } else if (response.getStatusCode() == 500) {
             JSONObject json = new JSONObject(responseText);
             String type = json.getString("type");
             String message = json.getString("message");
-            if(type.equals(UserNotFoundException.class.getSimpleName())){
+            if (type.equals(UserNotFoundException.class.getSimpleName())) {
                 throw new UserNotFoundException();
-            }else if(type.equals(InvalidVerificationCodeException.class.getSimpleName())){
+            } else if (type.equals(InvalidVerificationCodeException.class.getSimpleName())) {
                 throw new InvalidVerificationCodeException();
+            } else if (type.equals(UserAlreadyExistsException.class.getSimpleName())){
+                throw new UserAlreadyExistsException();
             }
             throw new AccountShieldException(message);
-        }else{
-            if(responseText == null){
+        } else {
+            if (responseText == null) {
                 throw new IOException("Server returned status " + response.getStatusCode());
             }
             throw new IOException("Server returned status " + response.getStatusCode() + ": " + responseText);
