@@ -228,7 +228,7 @@ public class AccountShield {
             getUserInstance(accountId, userId);
             JSONObject json = new JSONObject();
             json.put("case.parameters.VID", userId);
-            CaseQuery query = new CaseQuery("ASEpisodes.rules", "owner", "ASEpisodes.visit.xform", accountId, null, "latest+5", json.toString(), "case.watchValues.fp-device");
+            CaseQuery query = new CaseQuery("ASEpisodes.rules", "owner", "ASEpisodes.visit.xform", accountId, null, "latest", json.toString(), "case.watchValues.fp-device");
             List<Case> cases = findCases(query);
             List<Device> devices = new LinkedList<Device>();
             for (Case deviceCase : cases) {
