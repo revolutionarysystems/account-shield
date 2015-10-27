@@ -32,11 +32,12 @@ public class AccountShieldClientImpl implements AccountShieldClient {
 
     @Override
     public void registerUser(String sessionId, User user) throws AccountShieldException, IOException {
-        HttpRequest request = new HttpRequest(url + "/" + sessionId + "/registerUser");
+        HttpRequest request = new HttpRequest(url + "/registerUser");
         request.setMethod(HttpMethod.POST);
         request.setCredentials(new BasicAuthCredentials(username, password));
-        request.getHeaders().put("Content-Type", "application/json");
-        request.setBody(new ByteArrayInputStream(new JSONObject(user).toString().getBytes()));
+        request.getParameters().put("sessionId", sessionId);
+        request.getParameters().put("userId", user.getId());
+        request.getParameters().put("email", user.getEmail());
         HttpResponse response = httpClient.invoke(request);
         readResponse(response);
     }

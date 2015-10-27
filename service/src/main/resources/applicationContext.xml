@@ -25,7 +25,10 @@
         </property>
         <property name="instances">
             <set>
-                <bean class="uk.co.revsys.account.shield.service.AccountShieldService">
+                <bean class="uk.co.revsys.account.shield.service.LWCService">
+                    <constructor-arg index="0" ref="accountShield"/>
+                </bean>
+                <bean class="uk.co.revsys.account.shield.service.MainService">
                     <constructor-arg index="0" ref="accountShield"/>
                 </bean>
             </set>
