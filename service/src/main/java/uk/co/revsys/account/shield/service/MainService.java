@@ -3,6 +3,8 @@ package uk.co.revsys.account.shield.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.Encoded;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -16,7 +18,7 @@ import org.apache.shiro.SecurityUtils;
 import org.json.JSONObject;
 import uk.co.revsys.account.shield.AccountShield;
 import uk.co.revsys.account.shield.Device;
-import uk.co.revsys.account.shield.DeviceCheck;
+import uk.co.revsys.account.shield.LoginCheck;
 import uk.co.revsys.account.shield.Session;
 import uk.co.revsys.account.shield.User;
 
@@ -33,11 +35,12 @@ public class MainService extends AbstractService{
     @POST
     @Path("/registerUser")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response registerUser(@FormParam("sessionId") String sessionId, @FormParam("userId") String userId, @FormParam("email") String email){
+    public Response registerUser(@FormParam("userId") String userId, @FormParam("email") String email){
+        System.out.println("email = " + email);
         User user = new User(userId);
         user.setEmail(email);
         try {
-            accountShield.registerUser(getAccountId(), sessionId, user);
+            accountShield.registerUser(getAccountId(), user);
             return Response.ok().build();
         } catch (Exception ex) {
             return handleException(ex);
@@ -45,9 +48,12 @@ public class MainService extends AbstractService{
     }
     
     @GET
-    @Path("/{userId}")
+    @Path("/user")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getUser(@PathParam("userId") String userId){
+    public Response getUser(@QueryParam("userId") String userId){
+        if(userId == null || userId.isEmpty()){
+            return Response.status(Response.Status.BAD_REQUEST).entity("You must provide a userId").build();
+        }
         try{
             User user = accountShield.getUser(getAccountId(), userId);
             return Response.ok().entity(new JSONObject(user).toString()).build();
@@ -57,10 +63,13 @@ public class MainService extends AbstractService{
     }
     
     @POST
-    @Path("/{userId}")
+    @Path("/user")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response updateUser(@PathParam("userId") String userId, @FormParam("email") String email){
+    public Response updateUser(@QueryParam("userId") String userId, @FormParam("email") String email){
+        if(userId == null || userId.isEmpty()){
+            return Response.status(Response.Status.BAD_REQUEST).entity("You must provide a userId").build();
+        }
         User user = new User(userId);
         user.setEmail(email);
         try{
@@ -72,12 +81,15 @@ public class MainService extends AbstractService{
     }
     
     @GET
-    @Path("/checkDevice")
+    @Path("/checkLogin")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response checkDevice(@QueryParam("sessionId") String sessionId, @QueryParam("userId") String userId){
+    public Response checkLogin(@QueryParam("sessionId") String sessionId, @QueryParam("userId") String userId){
+        if(userId == null || userId.isEmpty()){
+            return Response.status(Response.Status.BAD_REQUEST).entity("You must provide a userId").build();
+        }
         try {
-            DeviceCheck deviceCheck = accountShield.checkDevice(getAccountId(), sessionId, userId);
-            return Response.ok().entity(new JSONObject(deviceCheck).toString()).build();
+            LoginCheck loginCheck = accountShield.checkLogin(getAccountId(), sessionId, userId);
+            return Response.ok().entity(objectMapper.writeValueAsString(loginCheck)).build();
         } catch (Exception ex) {
             return handleException(ex);
         }
@@ -87,6 +99,9 @@ public class MainService extends AbstractService{
     @Path("/requestDeviceVerification")
     @Produces(MediaType.APPLICATION_JSON)
     public Response requestDeviceVerification(@QueryParam("sessionId") String sessionId, @QueryParam("userId") String userId){
+        if(userId == null || userId.isEmpty()){
+            return Response.status(Response.Status.BAD_REQUEST).entity("You must provide a userId").build();
+        }
         try {
             accountShield.requestDeviceVerification(getAccountId(), sessionId, userId);
             return Response.ok().build();
@@ -99,6 +114,9 @@ public class MainService extends AbstractService{
     @Path("/verifyDevice")
     @Produces(MediaType.APPLICATION_JSON)
     public Response verifyDevice(@QueryParam("sessionId") String sessionId, @QueryParam("userId") String userId, @QueryParam("verificationCode") String verificationCode){
+        if(userId == null || userId.isEmpty()){
+            return Response.status(Response.Status.BAD_REQUEST).entity("You must provide a userId").build();
+        }
         try {
             accountShield.verifyDevice(getAccountId(), sessionId, userId, verificationCode);
             return Response.ok().build();
@@ -108,11 +126,14 @@ public class MainService extends AbstractService{
     }
     
     @GET
-    @Path("/{userId}/sessions")
+    @Path("/sessions")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getSessions(@PathParam("userId") String userId){
+    public Response getSessions(@QueryParam("userId") String userId, @DefaultValue("0") @QueryParam("offset") int offset, @DefaultValue("5") @QueryParam("limit") int limit){
+        if(userId == null || userId.isEmpty()){
+            return Response.status(Response.Status.BAD_REQUEST).entity("You must provide a userId").build();
+        }
         try {
-            List<Session> sessions = accountShield.getSessions(getAccountId(), userId);
+            List<Session> sessions = accountShield.getSessions(getAccountId(), userId, offset, limit);
             return Response.ok().header("Access-Control-Allow-Origin", "*").entity(objectMapper.writeValueAsString(sessions)).build();
         } catch (Exception ex) {
             return handleException(ex);
@@ -120,9 +141,12 @@ public class MainService extends AbstractService{
     }
     
     @GET
-    @Path("/{userId}/sessions/{sessionId}")
+    @Path("/sessions/{sessionId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getSession(@PathParam("userId") String userId, @PathParam("sessionId") String sessionId){
+    public Response getSession(@QueryParam("userId") String userId, @PathParam("sessionId") String sessionId){
+        if(userId == null || userId.isEmpty()){
+            return Response.status(Response.Status.BAD_REQUEST).entity("You must provide a userId").build();
+        }
         try {
             Session session = accountShield.getSession(getAccountId(), userId, sessionId);
             System.out.println("session = " + session);
@@ -133,9 +157,12 @@ public class MainService extends AbstractService{
     }
     
     @GET
-    @Path("/{userId}/devices")
+    @Path("/devices")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getDevices(@PathParam("userId") String userId){
+    public Response getDevices(@QueryParam("userId") String userId){
+        if(userId == null || userId.isEmpty()){
+            return Response.status(Response.Status.BAD_REQUEST).entity("You must provide a userId").build();
+        }
         try {
             List<Device> devices = accountShield.getDevices(getAccountId(), userId);
             return Response.ok().entity(objectMapper.writeValueAsString(devices)).build();
@@ -145,9 +172,12 @@ public class MainService extends AbstractService{
     }
     
     @GET
-    @Path("/{userId}/device/{deviceId}")
+    @Path("/device/{deviceId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getDevices(@PathParam("userId") String userId, @PathParam("deviceId") String deviceId){
+    public Response getDevices(@QueryParam("userId") String userId, @PathParam("deviceId") String deviceId){
+        if(userId == null || userId.isEmpty()){
+            return Response.status(Response.Status.BAD_REQUEST).entity("You must provide a userId").build();
+        }
         try {
             Device device = accountShield.getDevice(getAccountId(), userId, deviceId);
             return Response.ok().entity(objectMapper.writeValueAsString(device)).build();

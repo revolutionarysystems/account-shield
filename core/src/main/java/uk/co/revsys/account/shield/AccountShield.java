@@ -40,7 +40,7 @@ public class AccountShield {
         this.mailer = mailer;
     }
 
-    public void registerUser(String accountId, String sessionId, User user) throws AccountShieldException {
+    public void registerUser(String accountId, User user) throws AccountShieldException {
         try {
             OlogyTemplate userTemplate = ServiceFactory.getOlogyTemplateService().findByName("Account Shield User Template");
             try {
@@ -54,15 +54,12 @@ public class AccountShield {
             userInstance.setAttribute("userId", new Property(user.getId()));
             userInstance.setAttribute("email", new Property(user.getEmail()));
             ServiceFactory.getOlogyInstanceService().create(userInstance);
-            applyLogin(accountId, user.getId(), sessionId, "registered");
         } catch (DaoException ex) {
             throw new AccountShieldException("Unable to register user");
         } catch (ValidationException ex) {
             throw new AccountShieldException("Unable to register user: " + ex.getMessage());
         } catch (UnexpectedAttributeException ex) {
             throw new AccountShieldException("Unable to register user: " + ex.getMessage());
-        } catch (OddballClientException ex) {
-            throw new AccountShieldException("Unable to register user");
         }
     }
 
@@ -96,13 +93,23 @@ public class AccountShield {
         }
     }
 
-    public DeviceCheck checkDevice(String accountId, String sessionId, String userId) throws AccountShieldException {
+    public LoginCheck checkLogin(String accountId, String sessionId, String userId) throws AccountShieldException {
         try {
             getUserInstance(accountId, userId);
             Assessment assessment = applyLogin(accountId, sessionId, userId, "login");
-            return new DeviceCheck(true);
+            JSONObject json = new JSONObject(assessment.getBody());
+            String challengeString = json.getJSONObject("derived").getString("challenge");
+            if(challengeString.equals("none")){
+                return new LoginCheck(false);
+            }else{
+                VerificationReason verificationReason = VerificationReason.UNVERIFIED;
+                if(challengeString.equals("disowned")){
+                    verificationReason = VerificationReason.DISOWNED;
+                }
+                return new LoginCheck(true, verificationReason);
+            }
         } catch (OddballClientException ex) {
-            throw new AccountShieldException("Unable to check device");
+            throw new AccountShieldException("Unable to check login");
         }
     }
 
@@ -161,16 +168,26 @@ public class AccountShield {
         }
     }
 
-    public List<Session> getSessions(String accountId, String userId) throws UserNotFoundException, AccountShieldException {
+    public List<Session> getSessions(String accountId, String userId, int limit) throws UserNotFoundException, AccountShieldException {
+        return getSessions(accountId, userId, 0, limit);
+    }
+    
+    public List<Session> getSessions(String accountId, String userId, int offset, int limit) throws UserNotFoundException, AccountShieldException {
         try {
+            if(offset < 0){
+                offset = 0;
+            }
+            if(limit < 1){
+                limit = 1;
+            }
             getUserInstance(accountId, userId);
             JSONObject json = new JSONObject();
             json.put("case.parameters.VID", userId);
-            CaseQuery query = new CaseQuery("ASEpisodes.rules", "owner", "ASEpisodes.visit.xform", accountId, null, "latest+5", json.toString());
+            CaseQuery query = new CaseQuery("ASEpisodes.rules", "owner", "ASEpisodes.visit.xform", accountId, null, "latest " + (offset+1) + "-" + limit, json.toString());
             List<Case> cases = findCases(query);
-            System.out.println("cases = " + cases.size());
             List<Session> sessions = new LinkedList<Session>();
             for (Case sessionCase : cases) {
+                System.out.println(sessionCase.getBody());
                 JSONObject caseJSON = new JSONObject(sessionCase.getBody());
                 sessions.add(getSessionFromJSON(caseJSON));
             }
@@ -261,13 +278,23 @@ public class AccountShield {
         }
     }
 
-    public List<Session> getSessionsForDevice(String accountId, String userId, String deviceId) throws UserNotFoundException, AccountShieldException {
+    public List<Session> getSessionsForDevice(String accountId, String userId, String deviceId, int limit) throws UserNotFoundException, AccountShieldException {
+        return getSessionsForDevice(accountId, userId, deviceId, 0, limit);
+    }
+    
+    public List<Session> getSessionsForDevice(String accountId, String userId, String deviceId, int offset, int limit) throws UserNotFoundException, AccountShieldException {
         try {
+            if(offset < 0){
+                offset = 0;
+            }
+            if(limit < 1){
+                limit = 1;
+            }
             getUserInstance(accountId, userId);
             JSONObject json = new JSONObject();
             json.put("case.parameters.VID", userId);
             json.put("case.watchValues.fp-device", deviceId);
-            CaseQuery query = new CaseQuery("ASEpisodes.rules", "owner", "ASEpisodes.visit.xform", accountId, null, "latest+5", json.toString());
+            CaseQuery query = new CaseQuery("ASEpisodes.rules", "owner", "ASEpisodes.visit.xform", accountId, null, "latest " + (offset+1) + "-" + limit, json.toString());
             List<Case> cases = findCases(query);
             System.out.println("cases = " + cases.size());
             List<Session> sessions = new LinkedList<Session>();
@@ -324,6 +351,7 @@ public class AccountShield {
             json.put("parameters", data);
             ApplyRuleSetRequest request = new ApplyRuleSetRequest("ASLogin.rules", json.toString(), "ASLogin.incoming.json", "ASLoginProcessor.script");
             Assessment assessment = oddballClient.applyRuleSet(request);
+            assessment = new Assessment(new JSONArray(assessment.getBody()).getJSONObject(0).toString());
             return assessment;
         } catch (IOException ex) {
             throw new OddballClientException(ex);
@@ -338,9 +366,25 @@ public class AccountShield {
         Device device = getDeviceFromJSON(json);
         session.setDevice(device);
         Connection connection = new Connection();
-        connection.setCity(json.getString("locationCity"));
-        connection.setCountry(json.getString("locationCountry"));
         connection.setIpAddress(json.getString("connectionExternalIP"));
+        Location location = new Location();
+        location.setCity(json.getString("locationCity"));
+        location.setCountry(json.getString("locationCountry"));
+        String coordinates = json.getString("locationCoords");
+        String[] tokens = coordinates.split(",");
+        if (tokens.length == 2) {
+            try {
+                String latitudeString = tokens[0];
+                String longitudeString = tokens[1];
+                float latitude = Float.parseFloat(latitudeString);
+                float longitude = Float.parseFloat(longitudeString);
+                location.setLatitude(latitude);
+                location.setLongitude(longitude);
+            } catch (NumberFormatException ex) {
+                System.out.println("Unable to parse coordinates " + coordinates);
+            }
+        }
+        connection.setLocation(location);
         session.setConnection(connection);
         return session;
     }

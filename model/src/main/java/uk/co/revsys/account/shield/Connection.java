@@ -3,8 +3,7 @@ package uk.co.revsys.account.shield;
 public class Connection {
 
     private String ipAddress;
-    private String city;
-    private String country;
+    private Location location;
 
     public String getIpAddress() {
         return ipAddress;
@@ -14,20 +13,12 @@ public class Connection {
         this.ipAddress = ipAddress;
     }
 
-    public String getCity() {
-        return city;
+    public Location getLocation() {
+        return location;
     }
 
-    public void setCity(String city) {
-        this.city = city;
+    public void setLocation(Location location) {
+        this.location = location;
     }
 
-    public String getCountry() {
-        return country;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
-    }
-    
 }

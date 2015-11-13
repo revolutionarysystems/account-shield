@@ -4,13 +4,13 @@ import java.io.IOException;
 
 public interface AccountShieldClient {
 
-    public void registerUser(String sessionId, User user) throws UserAlreadyExistsException, AccountShieldException, IOException;
+    public void registerUser(User user) throws UserAlreadyExistsException, AccountShieldException, IOException;
     
     public User getUser(String userId) throws UserNotFoundException, AccountShieldException, IOException;
     
     public void updateUser(User user) throws UserNotFoundException, AccountShieldException, IOException;
     
-    public DeviceCheck checkDevice(String sessionId, String userId) throws UserNotFoundException, AccountShieldException, IOException;
+    public LoginCheck checkLogin(String sessionId, String userId) throws UserNotFoundException, AccountShieldException, IOException;
     
     public void requestDeviceVerification(String sessionId, String userId) throws UserNotFoundException, AccountShieldException, IOException;
     

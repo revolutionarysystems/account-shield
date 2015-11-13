@@ -1,8 +1,10 @@
 package uk.co.revsys.account.shield;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLEncoder;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -19,32 +21,35 @@ public class AccountShieldClientImpl implements AccountShieldClient {
     final Logger logger = LoggerFactory.getLogger(AccountShieldClientImpl.class);
 
     private HttpClient httpClient;
+    private ObjectMapper objectMapper;
     private String url;
     private String username;
     private String password;
 
     public AccountShieldClientImpl(String url, String username, String password) {
         this.httpClient = new HttpClientImpl();
+        this.objectMapper = new ObjectMapper();
         this.url = url;
         this.username = username;
         this.password = password;
     }
 
     @Override
-    public void registerUser(String sessionId, User user) throws AccountShieldException, IOException {
+    public void registerUser(User user) throws AccountShieldException, IOException {
         HttpRequest request = new HttpRequest(url + "/registerUser");
         request.setMethod(HttpMethod.POST);
         request.setCredentials(new BasicAuthCredentials(username, password));
-        request.getParameters().put("sessionId", sessionId);
         request.getParameters().put("userId", user.getId());
-        request.getParameters().put("email", user.getEmail());
+        if (user.getEmail() != null) {
+            request.getParameters().put("email", URLEncoder.encode(user.getEmail(), "UTF-8"));
+        }
         HttpResponse response = httpClient.invoke(request);
         readResponse(response);
     }
 
     @Override
     public User getUser(String userId) throws UserNotFoundException, AccountShieldException, IOException {
-        HttpRequest request = new HttpRequest(url + "/" + userId);
+        HttpRequest request = new HttpRequest(url + "/user?userId=" + userId);
         request.setCredentials(new BasicAuthCredentials(username, password));
         HttpResponse response = httpClient.invoke(request);
         String responseText = readResponse(response);
@@ -56,7 +61,7 @@ public class AccountShieldClientImpl implements AccountShieldClient {
 
     @Override
     public void updateUser(User user) throws UserNotFoundException, AccountShieldException, IOException {
-        HttpRequest request = new HttpRequest(url + "/" + user.getId());
+        HttpRequest request = new HttpRequest(url + "/user?userId=" + user.getId());
         request.setMethod(HttpMethod.POST);
         request.setCredentials(new BasicAuthCredentials(username, password));
         request.getHeaders().put("Content-Type", "application/json");
@@ -66,14 +71,13 @@ public class AccountShieldClientImpl implements AccountShieldClient {
     }
 
     @Override
-    public DeviceCheck checkDevice(String sessionId, String userId) throws UserNotFoundException, AccountShieldException, IOException {
-        HttpRequest request = new HttpRequest(url + "/checkDevice?sessionId=" + sessionId + "&userId=" + userId);
+    public LoginCheck checkLogin(String sessionId, String userId) throws UserNotFoundException, AccountShieldException, IOException {
+        HttpRequest request = new HttpRequest(url + "/checkLogin?sessionId=" + sessionId + "&userId=" + userId);
         request.setCredentials(new BasicAuthCredentials(username, password));
         HttpResponse response = httpClient.invoke(request);
         String responseText = readResponse(response);
-        JSONObject json = new JSONObject(responseText);
-        DeviceCheck deviceCheck = new DeviceCheck(true);
-        return deviceCheck;
+        LoginCheck loginCheck = objectMapper.readValue(responseText, LoginCheck.class);
+        return loginCheck;
     }
 
     @Override
@@ -112,7 +116,7 @@ public class AccountShieldClientImpl implements AccountShieldClient {
                 throw new UserNotFoundException();
             } else if (type.equals(InvalidVerificationCodeException.class.getSimpleName())) {
                 throw new InvalidVerificationCodeException();
-            } else if (type.equals(UserAlreadyExistsException.class.getSimpleName())){
+            } else if (type.equals(UserAlreadyExistsException.class.getSimpleName())) {
                 throw new UserAlreadyExistsException();
             }
             throw new AccountShieldException(message);
