@@ -36,7 +36,8 @@ public class VerificationServlet extends HttpServlet{
         String verificationCode = req.getParameter("verificationCode");
         try {
             accountShieldClient.verifyDevice(sessionId, userId, verificationCode);
-            resp.sendRedirect(userId);
+            resp.sendRedirect("verifyDevice.html?sessionId=" + sessionId + "&userId=" + userId);
+//            resp.sendRedirect(userId);
         } catch (InvalidVerificationCodeException ex) {
             resp.sendRedirect("deviceVerificationFailed.html");
         } catch (AccountShieldException ex) {

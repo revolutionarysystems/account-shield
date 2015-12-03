@@ -324,10 +324,11 @@ public class AccountShield {
         }
     }
 
-    private OlogyInstance getUserInstance(String accountId, String userId) throws UserNotFoundException, AccountShieldException {
+        private OlogyInstance getUserInstance(String accountId, String userId) throws UserNotFoundException, AccountShieldException {
         try {
             Map queryParams = new HashMap();
-            queryParams.put("accountId", accountId);
+            //queryParams.put("accountId", accountId);
+            //ACAE Change for the sake of experiementation
             queryParams.put("userId", userId);
             List<OlogyInstance> results = ServiceFactory.getOlogyInstanceService().find("user", new JSONQuery(queryParams));
             if (results.isEmpty()) {
