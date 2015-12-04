@@ -113,6 +113,26 @@ public class AccountShield {
         }
     }
 
+    public LoginCheck autoVerify(String accountId, String sessionId, String userId) throws AccountShieldException {
+        try {
+            getUserInstance(accountId, userId);
+            Assessment assessment = applyLogin(accountId, sessionId, userId, "register");
+            JSONObject json = new JSONObject(assessment.getBody());
+            String challengeString = json.getJSONObject("derived").getString("challenge");
+            if(challengeString.equals("none")){
+                return new LoginCheck(false);
+            }else{
+                VerificationReason verificationReason = VerificationReason.UNVERIFIED;
+                if(challengeString.equals("disowned")){
+                    verificationReason = VerificationReason.DISOWNED;
+                }
+                return new LoginCheck(true, verificationReason);
+            }
+        } catch (OddballClientException ex) {
+            throw new AccountShieldException("Unable to auto register");
+        }
+    }
+
     public void requestDeviceVerification(String accountId, String sessionId, String userId) throws AccountShieldException {
         try {
             // TODO send request to oddball for device details
@@ -327,8 +347,7 @@ public class AccountShield {
         private OlogyInstance getUserInstance(String accountId, String userId) throws UserNotFoundException, AccountShieldException {
         try {
             Map queryParams = new HashMap();
-            //queryParams.put("accountId", accountId);
-            //ACAE Change for the sake of experiementation
+            queryParams.put("accountId", accountId);
             queryParams.put("userId", userId);
             List<OlogyInstance> results = ServiceFactory.getOlogyInstanceService().find("user", new JSONQuery(queryParams));
             if (results.isEmpty()) {

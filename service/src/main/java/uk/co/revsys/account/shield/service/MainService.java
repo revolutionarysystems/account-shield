@@ -95,6 +95,23 @@ public class MainService extends AbstractService{
         }
     }
     
+
+    @GET
+    @Path("/autoVerify")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response autoVerify(@QueryParam("sessionId") String sessionId, @QueryParam("userId") String userId){
+        if(userId == null || userId.isEmpty()){
+            return Response.status(Response.Status.BAD_REQUEST).entity("You must provide a userId").build();
+        }
+        try {
+            LoginCheck loginCheck = accountShield.autoVerify(getAccountId(), sessionId, userId);
+            return Response.ok().entity(objectMapper.writeValueAsString(loginCheck)).build();
+        } catch (Exception ex) {
+            return handleException(ex);
+        }
+    }
+    
+
     @GET
     @Path("/requestDeviceVerification")
     @Produces(MediaType.APPLICATION_JSON)
