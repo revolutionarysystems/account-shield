@@ -47,6 +47,22 @@ public class MainService extends AbstractService{
         }
     }
     
+    @POST
+    @Path("/updateUserEmail")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateUserEmail(@FormParam("userId") String userId, @FormParam("email") String email){
+        System.out.println("email = " + email);
+        try {
+            User user = accountShield.getUser(getAccountId(), userId);
+            user.setEmail(email);
+            accountShield.updateUser(getAccountId(), user);
+//            accountShield.registerUser(getAccountId(), user);
+            return Response.ok().build();
+        } catch (Exception ex) {
+            return handleException(ex);
+        }
+    }
+    
     @GET
     @Path("/user")
     @Produces(MediaType.APPLICATION_JSON)
