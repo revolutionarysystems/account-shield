@@ -133,6 +133,13 @@ public class AccountShield {
         }
     }
 
+    public List<Session> disownDevice(String accountId, String userId, String deviceId) throws AccountShieldException {
+            getUserInstance(accountId, userId);
+            return disownDeviceSessions(accountId, userId, deviceId);
+    }
+
+
+    
     public void requestDeviceVerification(String accountId, String sessionId, String userId) throws AccountShieldException {
         try {
             // TODO send request to oddball for device details
@@ -185,6 +192,26 @@ public class AccountShield {
             throw new AccountShieldException("Unable to verify device");
         } catch (OddballClientException ex) {
             throw new AccountShieldException("Unable to verify device");
+        }
+    }
+
+    public List<Session> disownDeviceSessions(String accountId, String userId, String deviceId) throws UserNotFoundException, AccountShieldException {
+        try {
+            getUserInstance(accountId, userId);
+            JSONObject json = new JSONObject();
+            json.put("case.parameters.VID", userId);
+            json.put("case.watchValues.fp-device", deviceId);
+            CaseQuery query = new CaseQuery("ASEpisodes.rules", "owner", "ASEpisodes.visit.xform", accountId, null, "latest", json.toString(), "ASDisown.script");
+            List<Case> cases = findCases(query);
+            List<Session> sessions = new LinkedList<Session>();
+            for (Case sessionCase : cases) {
+                System.out.println(sessionCase.getBody());
+                JSONObject caseJSON = new JSONObject(sessionCase.getBody());
+                sessions.add(getSessionFromJSON(caseJSON));
+            }
+            return sessions;
+        } catch (OddballClientException ex) {
+            throw new AccountShieldException("Unable to retrieve device");
         }
     }
 

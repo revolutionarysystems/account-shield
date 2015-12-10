@@ -134,4 +134,20 @@ public class LWCService extends AbstractService{
         }
     }
     
+    @GET
+    @Path("/devices/{deviceId}/disown")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response disownDevice(@PathParam("accountId") String accountId, @QueryParam("userId") String userId, @PathParam("deviceId") String deviceId){
+        if(userId == null || userId.isEmpty()){
+            return Response.status(Response.Status.BAD_REQUEST).entity("You must provide a userId").build();
+        }
+        try {
+            List<Session> sessions = accountShield.disownDevice(accountId, userId, deviceId);
+            return Response.ok().header("Access-Control-Allow-Origin", "*").entity(objectMapper.writeValueAsString(sessions)).build();
+        } catch (Exception ex) {
+            return handleException(ex);
+        }
+    }
+
+
 }
