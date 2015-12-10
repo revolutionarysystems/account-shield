@@ -3,7 +3,9 @@ package uk.co.revsys.account.shield.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -149,5 +151,20 @@ public class LWCService extends AbstractService{
         }
     }
 
+    @POST
+    @Path("/updateUserEmail")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateUserEmail(@PathParam("accountId") String accountId, @FormParam("userId") String userId, @FormParam("email") String email){
+        System.out.println("email = " + email);
+        try {
+            User user = accountShield.getUser(accountId, userId);
+            user.setEmail(email);
+            accountShield.updateUser(accountId, user);
+//            accountShield.registerUser(getAccountId(), user);
+            return Response.ok().build();
+        } catch (Exception ex) {
+            return handleException(ex);
+        }
+    }
 
 }
