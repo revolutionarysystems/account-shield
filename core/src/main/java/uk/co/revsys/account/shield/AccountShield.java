@@ -443,6 +443,8 @@ public class AccountShield {
         device.setId(json.optString("fp-device"));
         device.setPlatform(json.getString("devicePlatform"));
         device.setType(json.getString("deviceType"));
+        device.setBrowser(json.getString("deviceBrowser"));
+        device.setVerification(json.getString("deviceVerification"));
         return device;
     }
 
