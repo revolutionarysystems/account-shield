@@ -55,7 +55,7 @@ public class MainService extends AbstractService{
         try {
             User user = accountShield.getUser(getAccountId(), userId);
             user.setEmail(email);
-            accountShield.updateUser(getAccountId(), user);
+            accountShield.updateUser(getAccountId(), userId, user);
 //            accountShield.registerUser(getAccountId(), user);
             return Response.ok().build();
         } catch (Exception ex) {
@@ -89,7 +89,7 @@ public class MainService extends AbstractService{
         User user = new User(userId);
         user.setEmail(email);
         try{
-            accountShield.updateUser(getAccountId(), user);
+            accountShield.updateUser(getAccountId(), userId, user);
             return Response.ok().build();
         } catch (Exception ex) {
             return handleException(ex);

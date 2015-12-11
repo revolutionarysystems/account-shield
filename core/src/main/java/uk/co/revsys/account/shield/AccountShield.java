@@ -70,9 +70,10 @@ public class AccountShield {
         return user;
     }
 
-    public void updateUser(String accountId, User user) throws AccountShieldException {
+    public void updateUser(String accountId, String userId, User user) throws AccountShieldException {
         try {
-            OlogyInstance userInstance = getUserInstance(accountId, user.getId());
+//            OlogyInstance userInstance = getUserInstance(accountId, user.getId());
+            OlogyInstance userInstance = getUserInstance(accountId, userId);
             userInstance.setAttribute("email", new Property(user.getEmail()));
             ServiceFactory.getOlogyInstanceService().update(userInstance);
         } catch (DaoException ex) {
