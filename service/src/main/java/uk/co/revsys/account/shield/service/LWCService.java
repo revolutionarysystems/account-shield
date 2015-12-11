@@ -160,8 +160,7 @@ public class LWCService extends AbstractService{
             User user = accountShield.getUser(accountId, userId);
             user.setEmail(email);
             accountShield.updateUser(accountId, userId, user);
-//            accountShield.registerUser(getAccountId(), user);
-            return Response.ok().build();
+            return Response.ok().header("Access-Control-Allow-Origin", "*").entity(new JSONObject(user).toString()).build();
         } catch (Exception ex) {
             return handleException(ex);
         }
@@ -172,14 +171,11 @@ public class LWCService extends AbstractService{
     @Produces(MediaType.APPLICATION_JSON)
     public Response updateUserEmailGet(@PathParam("accountId") String accountId, @QueryParam("userId") String userId, @QueryParam("email") String email){
         System.out.println("email = " + email);
-        System.out.println("userId = " + userId);
-        System.out.println("accountId = " + accountId);
         try {
             User user = accountShield.getUser(accountId, userId);
             user.setEmail(email);
             accountShield.updateUser(accountId, userId, user);
-//            accountShield.registerUser(getAccountId(), user);
-            return Response.ok().build();
+            return Response.ok().header("Access-Control-Allow-Origin", "*").entity(new JSONObject(user).toString()).build();
         } catch (Exception ex) {
             return handleException(ex);
         }
