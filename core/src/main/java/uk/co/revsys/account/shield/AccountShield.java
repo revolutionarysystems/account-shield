@@ -201,7 +201,7 @@ public class AccountShield {
             JSONObject json = new JSONObject();
             json.put("case.parameters.VID", userId);
             json.put("case.watchValues.fp-device", deviceId);
-            CaseQuery query = new CaseQuery("ASEpisodes.rules", "owner", "ASEpisodes.visit.xform", accountId, null, "latest", json.toString(), "ASDisown.script");
+            CaseQuery query = new CaseQuery("ASEpisodes.rules", "owner", "ASEpisodes.visit.xform", accountId, null, "latest", json.toString(), null, "ASDisown.script");
             List<Case> cases = findCases(query);
             List<Session> sessions = new LinkedList<Session>();
             for (Case sessionCase : cases) {
