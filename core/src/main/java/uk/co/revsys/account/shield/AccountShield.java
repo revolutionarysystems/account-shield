@@ -139,7 +139,7 @@ public class AccountShield {
     }
 
 
-    
+
     public void requestDeviceVerification(String accountId, String sessionId, String userId) throws AccountShieldException {
         try {
             // TODO send request to oddball for device details
@@ -218,7 +218,7 @@ public class AccountShield {
     public List<Session> getSessions(String accountId, String userId, int limit) throws UserNotFoundException, AccountShieldException {
         return getSessions(accountId, userId, 0, limit);
     }
-    
+
     public List<Session> getSessions(String accountId, String userId, int offset, int limit) throws UserNotFoundException, AccountShieldException {
         try {
             if(offset < 0){
@@ -328,7 +328,7 @@ public class AccountShield {
     public List<Session> getSessionsForDevice(String accountId, String userId, String deviceId, int limit) throws UserNotFoundException, AccountShieldException {
         return getSessionsForDevice(accountId, userId, deviceId, 0, limit);
     }
-    
+
     public List<Session> getSessionsForDevice(String accountId, String userId, String deviceId, int offset, int limit) throws UserNotFoundException, AccountShieldException {
         try {
             if(offset < 0){
