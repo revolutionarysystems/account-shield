@@ -28,7 +28,7 @@ public class LWCService extends AbstractService{
     public LWCService(AccountShield accountShield) {
         this.accountShield = accountShield;
     }
-    
+
     @GET
     @Path("/user")
     @Produces(MediaType.APPLICATION_JSON)
@@ -43,7 +43,7 @@ public class LWCService extends AbstractService{
             return handleException(ex);
         }
     }
-    
+
     @GET
     @Path("/sessions")
     @Produces(MediaType.APPLICATION_JSON)
@@ -58,7 +58,7 @@ public class LWCService extends AbstractService{
             return handleException(ex);
         }
     }
-    
+
     @GET
     @Path("/sessions/{sessionId}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -74,7 +74,7 @@ public class LWCService extends AbstractService{
             return handleException(ex);
         }
     }
-    
+
     @GET
     @Path("/sessions/{sessionId}/history")
     @Produces(MediaType.APPLICATION_JSON)
@@ -90,7 +90,7 @@ public class LWCService extends AbstractService{
             return handleException(ex);
         }
     }
-    
+
     @GET
     @Path("/devices")
     @Produces(MediaType.APPLICATION_JSON)
@@ -105,7 +105,7 @@ public class LWCService extends AbstractService{
             return handleException(ex);
         }
     }
-    
+
     @GET
     @Path("/devices/{deviceId}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -120,7 +120,7 @@ public class LWCService extends AbstractService{
             return handleException(ex);
         }
     }
-    
+
     @GET
     @Path("/devices/{deviceId}/sessions")
     @Produces(MediaType.APPLICATION_JSON)
@@ -135,7 +135,7 @@ public class LWCService extends AbstractService{
             return handleException(ex);
         }
     }
-    
+
     @GET
     @Path("/devices/{deviceId}/disown")
     @Produces(MediaType.APPLICATION_JSON)
