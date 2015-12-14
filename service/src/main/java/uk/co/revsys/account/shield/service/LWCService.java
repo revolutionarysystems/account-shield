@@ -92,6 +92,22 @@ public class LWCService extends AbstractService{
     }
 
     @GET
+    @Path("/episodes/{episodeId}/history")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getEpisodeHistory(@PathParam("accountId") String accountId, @QueryParam("userId") String userId, @PathParam("episodeId") String episodeId){
+        if(userId == null || userId.isEmpty()){
+            return Response.status(Response.Status.BAD_REQUEST).entity("You must provide a userId").build();
+        }
+        try {
+            List<Page> history = accountShield.getEpisodeHistory(accountId, userId, episodeId);
+            System.out.println("history = " + history);
+            return Response.ok().header("Access-Control-Allow-Origin", "*").entity(objectMapper.writeValueAsString(history)).build();
+        } catch (Exception ex) {
+            return handleException(ex);
+        }
+    }
+
+    @GET
     @Path("/devices")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getDevices(@PathParam("accountId") String accountId, @QueryParam("userId") String userId){

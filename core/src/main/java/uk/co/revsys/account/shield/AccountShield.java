@@ -288,6 +288,35 @@ public class AccountShield {
         }
     }
 
+    public List<Page> getEpisodeHistory(String accountId, String userId, String episodeId) throws UserNotFoundException, AccountShieldException {
+        try {
+            getUserInstance(accountId, userId);
+            JSONObject json = new JSONObject();
+            json.put("_id", episodeId);
+            CaseQuery query = new CaseQuery("ASEpisodes.rules", "owner", null, accountId, null, null, json.toString());
+            Case sessionCase = findCase(query);
+            if (sessionCase == null) {
+                return null;
+            }
+            JSONObject caseJSON = new JSONObject(sessionCase.getBody());
+            System.out.println(caseJSON.toString());
+            List<Page> history = new LinkedList<Page>();
+            JSONArray signalsJSON = caseJSON.getJSONObject("case").getJSONArray("signals");
+            for (int i = 0; i < signalsJSON.length(); i++) {
+                JSONObject signalJSON = signalsJSON.getJSONObject(i);
+                Page page = new Page();
+                String description = signalJSON.getString("description");
+                page.setUrl(description.substring(0, description.indexOf("||")));
+                page.setTitle(description.substring(description.indexOf("||") + 2));
+                page.setTime(new Date(signalJSON.getLong("time")));
+                history.add(page);
+            }
+            return history;
+        } catch (OddballClientException ex) {
+            throw new AccountShieldException("Unable to retrieve session history");
+        }
+    }
+
     public List<Device> getDevices(String accountId, String userId) throws UserNotFoundException, AccountShieldException {
         try {
             getUserInstance(accountId, userId);
