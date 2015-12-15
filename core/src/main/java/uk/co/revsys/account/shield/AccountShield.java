@@ -439,6 +439,7 @@ public class AccountShield {
         System.out.println(json.toString());
         Session session = new Session();
         session.setId(json.getString("series"));
+        session.setEpisodeId(json.getString("_id"));
         session.setTime(new Date(json.getLong("time")));
         Device device = getDeviceFromJSON(json);
         session.setDevice(device);

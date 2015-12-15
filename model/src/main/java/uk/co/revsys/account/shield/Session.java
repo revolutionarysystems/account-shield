@@ -5,6 +5,7 @@ import java.util.Date;
 public class Session {
 
     private String id;
+    private String episodeId;
     private Date time;
     private Device device;
     private Connection connection;
@@ -15,6 +16,14 @@ public class Session {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getEpisodeId() {
+        return episodeId;
+    }
+
+    public void setEpisodeId(String episodeId) {
+        this.episodeId = episodeId;
     }
 
     public Date getTime() {
