@@ -131,13 +131,13 @@ public class MainService extends AbstractService{
     @GET
     @Path("/requestDeviceVerification")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response requestDeviceVerification(@QueryParam("sessionId") String sessionId, @QueryParam("userId") String userId){
+    public Response requestDeviceVerification(@QueryParam("sessionId") String sessionId, @QueryParam("userId") String userId, @QueryParam("message") String message){
         if(userId == null || userId.isEmpty()){
             return Response.status(Response.Status.BAD_REQUEST).entity("You must provide a userId").build();
         }
         try {
-            accountShield.requestDeviceVerification(getAccountId(), sessionId, userId);
-            return Response.ok().build();
+            String verificationCode = accountShield.requestDeviceVerification(getAccountId(), sessionId, userId, message);
+            return Response.ok().entity(verificationCode).build();
         } catch (Exception ex) {
             return handleException(ex);
         }

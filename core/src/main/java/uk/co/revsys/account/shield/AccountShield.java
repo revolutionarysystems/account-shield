@@ -141,7 +141,7 @@ public class AccountShield {
 
 
 
-    public void requestDeviceVerification(String accountId, String sessionId, String userId) throws AccountShieldException {
+    public String requestDeviceVerification(String accountId, String sessionId, String userId, String message) throws AccountShieldException {
         try {
             // TODO send request to oddball for device details
             User user = getUser(accountId, userId);
@@ -160,8 +160,9 @@ public class AccountShield {
             email.setFromAddress("Account Shield", "do.not.reply@echo-central.com");
             email.setSubject("Please verify your device");
             email.addRecipient(user.getEmail(), user.getEmail(), RecipientType.TO);
-            email.setText("Your verification code is: " + verificationCode);
+            email.setText(message + "Your verification code is: " + verificationCode);
             mailer.sendMail(email);
+            return verificationCode;
         } catch (DaoException ex) {
             throw new AccountShieldException("Unable to send verification request");
         } catch (ValidationException ex) {

@@ -5,7 +5,7 @@ import org.json.JSONObject;
 
 public abstract class AbstractService {
 
-    protected Response handleException(Exception exception) {
+        protected Response handleException(Exception exception) {
         exception.printStackTrace();
         JSONObject json = new JSONObject();
         json.put("type", exception.getClass().getSimpleName());
