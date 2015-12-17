@@ -107,7 +107,14 @@ public class AccountShield {
                 if(challengeString.equals("disowned")){
                     verificationReason = VerificationReason.DISOWNED;
                 }
-                return new LoginCheck(true, verificationReason);
+                StringBuilder detail = new StringBuilder();
+                detail.append(json.getString("locationCity")+",");
+                detail.append(json.getString("locationRegion")+",");
+                detail.append(json.getString("locationCountry")+";");
+                detail.append(json.getString("devicePlatform")+",");
+                detail.append(json.getString("deviceType")+",");
+                detail.append(json.getString("deviceBrowser"));
+                return new LoginCheck(true, verificationReason, detail.toString());
             }
         } catch (OddballClientException ex) {
             throw new AccountShieldException("Unable to check login");
