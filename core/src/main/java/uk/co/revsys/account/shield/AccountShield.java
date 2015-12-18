@@ -146,6 +146,11 @@ public class AccountShield {
             return disownDeviceSessions(accountId, userId, deviceId);
     }
 
+    public List<Session> undoDisownDevice(String accountId, String userId, String deviceId) throws AccountShieldException {
+            getUserInstance(accountId, userId);
+            return undoDisownDeviceSessions(accountId, userId, deviceId);
+    }
+
 
 
     public String requestDeviceVerification(String accountId, String sessionId, String userId, String message) throws AccountShieldException {
@@ -211,6 +216,27 @@ public class AccountShield {
             json.put("case.parameters.VID", userId);
             json.put("case.watchValues.fp-device", deviceId);
             CaseQuery query = new CaseQuery("ASEpisodes.rules", "owner", null, accountId, null, null, json.toString(), null, "ASDisown.script");
+            List<Case> cases = findCases(query);
+            List<Session> sessions = new LinkedList<Session>();
+            for (Case sessionCase : cases) {
+                System.out.println(sessionCase.getBody());
+                JSONObject caseJSON = new JSONObject(sessionCase.getBody());
+                sessions.add(getSessionFromJSON(caseJSON));
+            }
+            return sessions;
+        } catch (OddballClientException ex) {
+            throw new AccountShieldException("Unable to retrieve device");
+        }
+    }
+
+    public List<Session> undoDisownDeviceSessions(String accountId, String userId, String deviceId) throws UserNotFoundException, AccountShieldException {
+        try {
+            getUserInstance(accountId, userId);
+            JSONObject json = new JSONObject();
+            json.put("case.parameters.VID", userId);
+            json.put("case.watchValues.fp-device", deviceId);
+            json.put("derived.device-verification", "disownedDevice");
+            CaseQuery query = new CaseQuery("ASEpisodes.rules", "owner", null, accountId, null, null, json.toString(), null, "ASUndoDisown.script");
             List<Case> cases = findCases(query);
             List<Session> sessions = new LinkedList<Session>();
             for (Case sessionCase : cases) {
