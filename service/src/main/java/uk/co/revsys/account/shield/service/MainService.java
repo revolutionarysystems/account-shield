@@ -78,6 +78,24 @@ public class MainService extends AbstractService{
         }
     }
     
+    @GET
+    @Path("/user/delete")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deleteUser(@QueryParam("userId") String userId){
+        if(userId == null || userId.isEmpty()){
+            return Response.status(Response.Status.BAD_REQUEST).entity("You must provide a userId").build();
+        }
+        try{
+            accountShield.deleteUser(getAccountId(), userId);
+            JSONObject response = new JSONObject();
+            response.put("deleted", userId);
+            return Response.ok().entity(response.toString()).build();
+        } catch (Exception ex) {
+            return handleException(ex);
+        }
+    }
+    
+
     @POST
     @Path("/user")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -137,7 +155,10 @@ public class MainService extends AbstractService{
         }
         try {
             String verificationCode = accountShield.requestDeviceVerification(getAccountId(), sessionId, userId, message);
-            return Response.ok().entity(verificationCode).build();
+            JSONObject response = new JSONObject();
+            response.put("user", userId);
+            response.put("verificationCode", verificationCode);
+            return Response.ok().entity(response.toString()).build();
         } catch (Exception ex) {
             return handleException(ex);
         }
