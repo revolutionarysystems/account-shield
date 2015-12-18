@@ -79,7 +79,7 @@ public class MainService extends AbstractService{
     }
     
     @GET
-    @Path("/user/delete")
+    @Path("/delete")
     @Produces(MediaType.APPLICATION_JSON)
     public Response deleteUser(@QueryParam("userId") String userId){
         if(userId == null || userId.isEmpty()){
