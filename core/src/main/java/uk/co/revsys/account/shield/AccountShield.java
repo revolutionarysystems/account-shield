@@ -202,12 +202,34 @@ public class AccountShield {
                 throw new InvalidVerificationCodeException();
             }
             applyLogin(accountId, sessionId, userId, "email");
+            verifyDeviceSessions(accountId, userId, sessionId);
         } catch (DaoException ex) {
             throw new AccountShieldException("Unable to verify device");
         } catch (OddballClientException ex) {
             throw new AccountShieldException("Unable to verify device");
         }
     }
+
+    public List<Session> verifyDeviceSessions(String accountId, String userId, String deviceId) throws UserNotFoundException, AccountShieldException {
+        try {
+            getUserInstance(accountId, userId);
+            JSONObject json = new JSONObject();
+            json.put("case.parameters.VID", userId);
+            json.put("case.watchValues.fp-device", deviceId);
+            CaseQuery query = new CaseQuery("ASEpisodes.rules", "owner", null, accountId, null, null, json.toString(), null, "ASVerify.script");
+            List<Case> cases = findCases(query);
+            List<Session> sessions = new LinkedList<Session>();
+            for (Case sessionCase : cases) {
+                System.out.println(sessionCase.getBody());
+                JSONObject caseJSON = new JSONObject(sessionCase.getBody());
+                sessions.add(getSessionFromJSON(caseJSON));
+            }
+            return sessions;
+        } catch (OddballClientException ex) {
+            throw new AccountShieldException("Unable to retrieve device");
+        }
+    }
+
 
     public List<Session> disownDeviceSessions(String accountId, String userId, String deviceId) throws UserNotFoundException, AccountShieldException {
         try {
