@@ -160,7 +160,22 @@ public class LWCService extends AbstractService{
             return Response.status(Response.Status.BAD_REQUEST).entity("You must provide a userId").build();
         }
         try {
-            List<Session> sessions = accountShield.disownDevice(accountId, userId, deviceId);
+            List<Session> sessions = accountShield.disownDeviceSessions(accountId, userId, deviceId);
+            return Response.ok().header("Access-Control-Allow-Origin", "*").entity(objectMapper.writeValueAsString(sessions)).build();
+        } catch (Exception ex) {
+            return handleException(ex);
+        }
+    }
+
+    @GET
+    @Path("/devices/{deviceId}/verify")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response verifyDevice(@PathParam("accountId") String accountId, @QueryParam("userId") String userId, @PathParam("deviceId") String deviceId){
+        if(userId == null || userId.isEmpty()){
+            return Response.status(Response.Status.BAD_REQUEST).entity("You must provide a userId").build();
+        }
+        try {
+            List<Session> sessions = accountShield.verifyDeviceSessions(accountId, userId, deviceId);
             return Response.ok().header("Access-Control-Allow-Origin", "*").entity(objectMapper.writeValueAsString(sessions)).build();
         } catch (Exception ex) {
             return handleException(ex);
@@ -175,7 +190,7 @@ public class LWCService extends AbstractService{
             return Response.status(Response.Status.BAD_REQUEST).entity("You must provide a userId").build();
         }
         try {
-            List<Session> sessions = accountShield.undoDisownDevice(accountId, userId, deviceId);
+            List<Session> sessions = accountShield.undoDisownDeviceSessions(accountId, userId, deviceId);
             return Response.ok().header("Access-Control-Allow-Origin", "*").entity(objectMapper.writeValueAsString(sessions)).build();
         } catch (Exception ex) {
             return handleException(ex);
