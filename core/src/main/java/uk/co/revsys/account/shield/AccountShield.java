@@ -192,6 +192,7 @@ public class AccountShield {
                 throw new InvalidVerificationCodeException();
             }
             applyLogin(accountId, sessionId, userId, "email");
+            verifyDeviceSessions(accountId, userId, sessionId);
         } catch (DaoException ex) {
             throw new AccountShieldException("Unable to verify device");
         } catch (OddballClientException ex) {
